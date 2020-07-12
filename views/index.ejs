@@ -6,6 +6,8 @@
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
+    <!-- prettier-ignore -->
+    <script src="https://www.google.com/recaptcha/api.js?render=<%=googleReCaptcha%>"></script>
 
     <!-- Bootstrap CSS -->
     <link
@@ -22,7 +24,7 @@
     <div class="container mt-4">
       <div class="row">
         <div class="col align-items-center">
-          <form action="/data" method="POST">
+          <form action="/test" method="POST">
             <div class="form-group">
               <input
                 type="text"
@@ -45,9 +47,17 @@
                 maxlength="240"
               ></textarea>
             </div>
+
             <!-- prettier-ignore -->
             <input name="formId" value=<%=formId%> type="text"
             style="display:none"/>
+            <input
+              name="token"
+              id="token"
+              value=""
+              type="text"
+              style="display: none;"
+            />
             <div class="form-group">
               <input type="submit" class="form-control" value="Submit" />
             </div>
@@ -98,5 +108,14 @@
     ></script>
     <script src="javascripts/threeLines.js"></script>
     <script src="javascripts/noSemicolon.js"></script>
+    <script>
+      grecaptcha.ready(function () {
+        grecaptcha
+          .execute("<%=googleReCaptcha%>", { action: "demo" })
+          .then(function (token) {
+            document.getElementById("token").value = token;
+          });
+      });
+    </script>
   </body>
 </html>
