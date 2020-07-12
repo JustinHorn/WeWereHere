@@ -21,8 +21,8 @@ router.get("/data", function (req, res, next) {
 function addUser(query) {
   let newUser = new dataFile.User(query.name, Date.now(), query.message);
 
-  users = [newUser, ...users];
   dataFile.addUserToFile(newUser);
+  users = [newUser, ...users];
 }
 
 module.exports = router;

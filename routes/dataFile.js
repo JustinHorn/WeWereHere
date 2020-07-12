@@ -4,6 +4,7 @@ const { throws } = require("assert");
 function User(name, time, message) {
   this.name = name;
   this.time = time;
+  this.timeStr = getDateString(time);
   this.message = message;
 }
 
@@ -28,7 +29,7 @@ function getUsers() {
     if (err) throw err;
     data = data.split(";");
     for (let i = 0; i < data.length - 3; i += 3) {
-      users.push(new User(data[i], getDateString(data[i + 1]), data[i + 2]));
+      users.push(new User(data[i], data[i + 1], data[i + 2]));
     }
     users = users.reverse();
   });
