@@ -1,0 +1,20 @@
+body {
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+.headline {
+  text-align: center;
+}
+
+a {
+  color: #00b7ff;
+}
+
+textarea {
+  resize: none;
+}
+
+#otherPeople > .col > p > a {
+  text-decoration: none;
+  color: #000000;
+}
