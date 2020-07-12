@@ -2,26 +2,27 @@ var express = require("express");
 var router = express.Router();
 
 const fs = require("fs");
+const { throws } = require("assert");
+
+const dataFile = require("./dataFile");
+
+let users = dataFile.getUsers();
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-  const user = { name: "Justin", time: "today", id: "1", message: "yo leute" };
-  res.render("index", { title: "We were here", users: [user] });
+  res.render("index", { title: "We were here", users: users });
 });
 
 router.get("/data", function (req, res, next) {
-  console.log(req.query);
-  const name = req.query.name;
-
-  const message = req.query.message;
-  fs.appendFile(
-    "IWasHere/../public/data.txt",
-    name + ";" + Date.now() + ";" + message + ";",
-    function (err) {
-      if (err) throw err;
-    }
-  );
-  res.render("index", { title: "We were here" });
+  addUser(req.query);
+  res.render("index", { title: "We were here", users: users });
 });
+
+function addUser(query) {
+  let newUser = new dataFile.User(query.name, Date.now(), query.message);
+
+  users = [newUser, ...users];
+  dataFile.addUserToFile(newUser);
+}
 
 module.exports = router;
