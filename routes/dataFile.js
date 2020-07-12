@@ -46,6 +46,8 @@ function addUserToFile(user) {
   );
 }
 
-exports.getUsers = getUsers;
-exports.User = User;
-exports.addUserToFile = addUserToFile;
+module.exports.getUsers = getUsers;
+
+module.exports.User = User;
+
+module.exports.addUserToFile = addUserToFile;
