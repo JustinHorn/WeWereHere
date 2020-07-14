@@ -2,6 +2,36 @@ var express = require("express");
 var router = express.Router();
 require("dotenv").config();
 
+const { MongoClient } = require("mongodb");
+
+const mongo_uri =
+  "mongodb+srv://justin:alhambra1@iwashere.yap7b.mongodb.net/IWasHere?retryWrites=true&w=majority";
+const client = new MongoClient(mongo_uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+async function listDatabases(client) {
+  await client.connect();
+  databasesList = await client.db().admin().listDatabases();
+
+  console.log("Databases:");
+  databasesList.databases.forEach((db) => console.log(` - ${db.name}`));
+  client.close();
+}
+
+async function insertToDataBase(client, user) {
+  await client.connect();
+
+  console.log("Connected correctly to server");
+  const db = client.db("IWasHere");
+  db.collection("Entries").insertOne(user, function (err, r) {
+    if (err) throw err;
+    console.log(r);
+    client.close();
+  });
+}
+
 const fs = require("fs");
 const fetch = require("isomorphic-fetch");
 
@@ -51,7 +81,7 @@ const fetchGoogle = (req, res) => {
 };
 function addUser(query) {
   let newUser = new dataFile.User(query.name, Date.now(), query.message);
-
+  insertToDataBase(client, newUser);
   dataFile.addUserToFile(newUser);
   users = [newUser, ...users];
 }
