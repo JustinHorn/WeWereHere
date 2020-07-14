@@ -4,33 +4,11 @@ require("dotenv").config();
 
 const { MongoClient } = require("mongodb");
 
-const mongo_uri =
-  "mongodb+srv://justin:alhambra1@iwashere.yap7b.mongodb.net/IWasHere?retryWrites=true&w=majority";
+const mongo_uri = process.env.MONGO;
 const client = new MongoClient(mongo_uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
-
-async function listDatabases(client) {
-  await client.connect();
-  databasesList = await client.db().admin().listDatabases();
-
-  console.log("Databases:");
-  databasesList.databases.forEach((db) => console.log(` - ${db.name}`));
-  client.close();
-}
-
-async function insertToDataBase(client, user) {
-  await client.connect();
-
-  console.log("Connected correctly to server");
-  const db = client.db("IWasHere");
-  db.collection("Entries").insertOne(user, function (err, r) {
-    if (err) throw err;
-    console.log(r);
-    client.close();
-  });
-}
 
 const fs = require("fs");
 const fetch = require("isomorphic-fetch");
@@ -39,8 +17,10 @@ const { throws } = require("assert");
 
 const dataFile = require("./dataFile");
 
-let users = dataFile.getUsers();
+let users = [];
 const formIds = new Set();
+
+fetchUsers(client);
 
 router.get("/", function (req, res, next) {
   sendIndex(res);
@@ -49,7 +29,10 @@ router.get("/", function (req, res, next) {
 router.post("/data", function (req, res, next) {
   if (isRequestValid(req)) {
     formIds.delete(req.body.formId);
-    fetchGoogle(req, res);
+    checkBot(req, res, () => {
+      addUser(req.body);
+      sendIndex(res);
+    });
   } else {
     sendIndex(res);
     res.end();
@@ -60,29 +43,31 @@ function isRequestValid(req) {
   return formIds.has(req.body.formId);
 }
 
-const fetchGoogle = (req, res) => {
+function checkBot(req, res, doSuccess) {
+  fetchGoogleJSON(req, res)
+    .then((response) => {
+      if (response.success) {
+        doSuccess();
+      } else {
+        res.json({ response });
+      }
+    })
+    .catch((error) => res.json({ error }));
+}
+
+const fetchGoogleJSON = (req, res) => {
   const secret_key = process.env.CAPTCHA_SECRET;
   const token = req.body.token;
   const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret_key}&response=${token}`;
 
-  fetch(url, {
+  return fetch(url, {
     method: "post",
-  })
-    .then((response) => response.json())
-    .then((google_response) => {
-      if (google_response.success) {
-        addUser(req.body);
-        sendIndex(res);
-      } else {
-        res.json({ google_response });
-      }
-    })
-    .catch((error) => res.json({ error }));
+  }).then((response) => response.json());
 };
+
 function addUser(query) {
   let newUser = new dataFile.User(query.name, Date.now(), query.message);
-  insertToDataBase(client, newUser);
-  dataFile.addUserToFile(newUser);
+  insertToDataBase(newUser);
   users = [newUser, ...users];
 }
 
@@ -109,6 +94,29 @@ function getRandomId() {
 
 function generateRandomNumber() {
   return Math.floor(Math.random() * 10000);
+}
+
+async function fetchUsers() {
+  await client.connect();
+
+  const db = client.db("IWasHere");
+  const result = await db.collection("Entries").find({});
+
+  result
+    .forEach((element) => {
+      users.push(element);
+    })
+    .then(() => {
+      users.sort((a, b) => parseInt(b.time) - parseInt(a.time));
+    });
+}
+
+async function insertToDataBase(user) {
+  console.log("Connected correctly to server");
+  const db = client.db("IWasHere");
+  db.collection("Entries").insertOne(user, function (err, r) {
+    if (err) throw err;
+  });
 }
 
 module.exports = router;
