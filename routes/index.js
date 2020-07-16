@@ -4,8 +4,10 @@ require("dotenv").config();
 
 const fetch = require("isomorphic-fetch");
 
-const { User, getRandomId } = require("./User");
-const { fetchUsers, insertToDataBase } = require("./mongoDB");
+const { User, getRandomId } = require("./helper/User");
+const { fetchUsers, insertToDataBase } = require("./helper/mongoDB");
+
+const { checkBot } = require("./helper/google");
 
 let users = [];
 const formIds = new Set();
@@ -36,31 +38,13 @@ router.post("/data", function (req, res, next) {
   }
 });
 
+router.get("/data", function (req, res, next) {
+  sendIndex(res);
+});
+
 function isRequestValid(req) {
   return formIds.has(req.body.formId);
 }
-
-function checkBot(req, res, doSuccess) {
-  fetchGoogleJSON(req, res)
-    .then((response) => {
-      if (response.success) {
-        doSuccess();
-      } else {
-        res.json({ response });
-      }
-    })
-    .catch((error) => res.json({ error }));
-}
-
-const fetchGoogleJSON = (req, res) => {
-  const secret_key = process.env.CAPTCHA_SECRET;
-  const token = req.body.token;
-  const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret_key}&response=${token}`;
-
-  return fetch(url, {
-    method: "post",
-  }).then((response) => response.json());
-};
 
 function addUser(query) {
   let newUser = new User(query.name, Date.now(), query.message);
